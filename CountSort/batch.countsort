@@ -1,0 +1,30 @@
+#!/bin/sh
+# this example batch script requests 1 node, 20 cores (the max)
+# per node.. requesting ALL available cores can be seen as a way
+# of requesting sole access to the node that gets allocated (other
+# users cannot request cores on the allocated node).
+# ON THE OTHER HAND... the user here only runs a single instance of a
+# single-threaded application -- namely the "hostname" command, which
+# is propogated to the allocated node by way of mpirun (see below).
+# for more info on requesting specific nodes see
+# "man pbs_resources"
+#PBS -V
+#PBS -l nodes=1:ppn=16:mpi
+#PBS -N CS
+#PBS -joe
+#PBS -q batch
+cd $PBS_O_WORKDIR
+NCORES=`wc -w < $PBS_NODEFILE`
+DATE=`date`
+echo "running on host: $HOSTNAME"
+echo "job submitted: $DATE"
+
+# run "serial" hostname commands with the help of mpirun -- obviously
+# (since it's the system "hostname" command, the application command
+# has NOT been built or linked using mpi compilers or libraries...)
+
+# also -- this "cut-down" set of flags is only viable due to the
+# fact that we are running processes that don't communicate (no
+# mpi comm flags) on only ONE NODE (no rsh flag). otherwise, an
+# extended set of flags as in batch.mpi is required....
+mpirun -np 1 -machinefile $PBS_NODEFILE ./countSort 10000 10
